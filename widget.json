@@ -2,7 +2,7 @@
   "id": "dimension_layout_controller",
   "name": "Dimension Layout Controller",
   "description": "Drag and reorder dimensions between Rows and Columns",
-  "version": "1.0.6",
+  "version": "1.0.0",
   "vendor": "Custom",
   "newInstancePrefix": "DimLayout",
 
@@ -10,8 +10,8 @@
     {
       "kind": "main",
       "tag": "dim-layout-controller",
-      "url": "https://sacplanning2025.github.io/dimension-layout-widget/index.html",
-      "integrity": "sha256-n4bQgYhMfWWaL+qgxVrQFaO/TxsrC4Is0V1sFbDwCgg="
+      "url": "https://sacplanning2025.github.io/dimension-layout-widget/main.js",
+      "integrity": "sha256-REPLACE_WITH_REAL_HASH"
     }
   ],
 
