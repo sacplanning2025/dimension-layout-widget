@@ -2,10 +2,9 @@
   "id": "dimension_layout_controller",
   "name": "Dimension Layout Controller",
   "description": "Drag and reorder dimensions between Rows and Columns",
-  "version": "1.0.3",
+  "version": "1.0.0",
   "vendor": "Custom",
   "newInstancePrefix": "DimLayout",
-  "icon": "table-chart",
 
   "webcomponents": [
     {
@@ -19,12 +18,11 @@
   "properties": {
     "tableId": {
       "type": "string",
-      "description": "Target table technical ID",
       "default": "Report_1"
     }
   },
 
   "methods": {},
-
   "events": {}
 }
+
