@@ -2,7 +2,7 @@
   "id": "dimension_layout_controller",
   "name": "Dimension Layout Controller",
   "description": "Drag and reorder dimensions between Rows and Columns",
-  "version": "1.0.0",
+  "version": "1.0.6",
   "vendor": "Custom",
   "newInstancePrefix": "DimLayout",
 
