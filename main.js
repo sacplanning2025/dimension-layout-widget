@@ -6,7 +6,6 @@
       super();
       this._shadowRoot = this.attachShadow({ mode: "open" });
       this._available = [];
-      this._selected = [];
       this._dragItem = null;
     }
 
@@ -14,33 +13,25 @@
       this.render();
     }
 
-    // ====== PROPERTIES ======
-    set availableItems(val) {
-      this._available = val ? val.split(",") : [];
+    // ===== PROPERTY FROM SAC =====
+    setAvailable(items) {
+      this._available = items || [];
       this.render();
     }
 
-    set selectedItems(val) {
-      this._selected = val ? val.split(",") : [];
-      this.render();
+    getLayout() {
+      const rows = this.getPanelValues("rowsList");
+      const columns = this.getPanelValues("columnsList");
+      const available = this.getPanelValues("availableList");
+
+      return {
+        rows: rows,
+        columns: columns,
+        available: available
+      };
     }
 
-    // ====== METHODS ======
-    setAvailable(arr) {
-      this._available = arr;
-      this.render();
-    }
-
-    setSelected(arr) {
-      this._selected = arr;
-      this.render();
-    }
-
-    getSelected() {
-      return this._selected;
-    }
-
-    // ====== RENDER ======
+    // ===== RENDER UI =====
     render() {
 
       this._shadowRoot.innerHTML = `
@@ -52,133 +43,125 @@
           }
 
           .panel {
-            width: 45%;
+            width: 30%;
             border: 1px solid #ccc;
             border-radius: 6px;
             padding: 8px;
-            min-height: 250px;
+            min-height: 300px;
+            background: #fafafa;
           }
 
           .title {
             font-weight: bold;
-            margin-bottom: 6px;
+            margin-bottom: 8px;
           }
 
           .item {
             padding: 6px;
-            margin-bottom: 4px;
-            background: #f5f5f5;
+            margin-bottom: 6px;
+            background: #e6e6e6;
             border-radius: 4px;
             cursor: move;
           }
 
-          .item.drag-over {
-            border: 2px dashed #0073e6;
-          }
-
-          input {
-            width: 100%;
-            margin-bottom: 6px;
+          .item:hover {
+            background: #d4d4d4;
           }
         </style>
 
         <div class="wrapper">
 
-          <div class="panel" id="availablePanel">
+          <div class="panel">
             <div class="title">Available</div>
-            <input type="text" placeholder="Search..." id="searchBox"/>
             <div id="availableList">
-              ${this._available.map(i => this.createItemHTML(i)).join("")}
+              ${this._available.map(i => this.createItem(i)).join("")}
             </div>
           </div>
 
-          <div class="panel" id="selectedPanel">
-            <div class="title">Selected</div>
-            <div id="selectedList">
-              ${this._selected.map(i => this.createItemHTML(i)).join("")}
-            </div>
+          <div class="panel">
+            <div class="title">Rows</div>
+            <div id="rowsList"></div>
+          </div>
+
+          <div class="panel">
+            <div class="title">Columns</div>
+            <div id="columnsList"></div>
           </div>
 
         </div>
       `;
 
-      this.addDragDrop();
-      this.addSearch();
+      this.addDragEvents();
     }
 
-    createItemHTML(text) {
-      return `<div class="item" draggable="true" data-value="${text}">${text}</div>`;
+    // ===== CREATE ITEM =====
+    createItem(value) {
+      return `<div class="item" draggable="true" data-value="${value}">${value}</div>`;
     }
 
-    // ====== DRAG DROP ======
-    addDragDrop() {
+    // ===== DRAG & DROP =====
+    addDragEvents() {
+
+      const lists = [
+        this._shadowRoot.getElementById("availableList"),
+        this._shadowRoot.getElementById("rowsList"),
+        this._shadowRoot.getElementById("columnsList")
+      ];
 
       const items = this._shadowRoot.querySelectorAll(".item");
-      const availableList = this._shadowRoot.getElementById("availableList");
-      const selectedList = this._shadowRoot.getElementById("selectedList");
 
       items.forEach(item => {
 
-        item.addEventListener("dragstart", () => {
+        item.addEventListener("dragstart", (e) => {
           this._dragItem = item;
+          e.dataTransfer.effectAllowed = "move";
         });
 
-        item.addEventListener("dragover", e => {
+        item.addEventListener("dragover", (e) => {
           e.preventDefault();
-          item.classList.add("drag-over");
         });
 
-        item.addEventListener("dragleave", () => {
-          item.classList.remove("drag-over");
-        });
-
-        item.addEventListener("drop", e => {
+        item.addEventListener("drop", (e) => {
           e.preventDefault();
-          item.classList.remove("drag-over");
-
-          if (this._dragItem !== item) {
+          if (this._dragItem && this._dragItem !== item) {
             item.parentNode.insertBefore(this._dragItem, item);
-            this.syncArrays();
+            this.fireLayoutEvent();
           }
         });
+
       });
 
-      [availableList, selectedList].forEach(panel => {
-        panel.addEventListener("dragover", e => e.preventDefault());
+      lists.forEach(list => {
 
-        panel.addEventListener("drop", e => {
+        list.addEventListener("dragover", (e) => {
           e.preventDefault();
-          panel.appendChild(this._dragItem);
-          this.syncArrays();
         });
+
+        list.addEventListener("drop", (e) => {
+          e.preventDefault();
+          if (this._dragItem) {
+            list.appendChild(this._dragItem);
+            this.fireLayoutEvent();
+          }
+        });
+
       });
     }
 
-    // ====== SEARCH ======
-    addSearch() {
-      const searchBox = this._shadowRoot.getElementById("searchBox");
-      searchBox.addEventListener("input", e => {
-        const value = e.target.value.toLowerCase();
-        const items = this._shadowRoot.querySelectorAll("#availableList .item");
-
-        items.forEach(item => {
-          item.style.display = item.dataset.value.toLowerCase().includes(value)
-            ? "block"
-            : "none";
-        });
-      });
+    // ===== GET PANEL VALUES =====
+    getPanelValues(panelId) {
+      const panel = this._shadowRoot.getElementById(panelId);
+      const items = panel.querySelectorAll(".item");
+      return Array.from(items).map(i => i.dataset.value);
     }
 
-    // ====== SYNC ======
-    syncArrays() {
-      const selectedItems = this._shadowRoot.querySelectorAll("#selectedList .item");
-      this._selected = Array.from(selectedItems).map(i => i.dataset.value);
+    // ===== FIRE EVENT TO SAC =====
+    fireLayoutEvent() {
 
-      const availableItems = this._shadowRoot.querySelectorAll("#availableList .item");
-      this._available = Array.from(availableItems).map(i => i.dataset.value);
+      const layout = this.getLayout();
 
-      this.dispatchEvent(new CustomEvent("onSelectionChanged", {
-        detail: { selected: this._selected }
+      this.dispatchEvent(new CustomEvent("onLayoutChanged", {
+        detail: layout
       }));
     }
 
