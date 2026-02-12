@@ -33,8 +33,23 @@
   },
 
   "methods": {
-    "setAvailable": {},
-    "setSelected": {},
-    "getSelected": {}
+  "setAvailable": {
+    "parameters": [
+      {
+        "name": "items",
+        "type": "string[]"
+      }
+    ]
+  },
+  "setSelected": {
+    "parameters": [
+      {
+        "name": "items",
+        "type": "string[]"
+      }
+    ]
+  },
+  "getSelected": {
+    "returnType": "string[]"
   }
 }
