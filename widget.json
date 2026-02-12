@@ -41,15 +41,13 @@
       }
     ]
   },
-  "setSelected": {
-    "parameters": [
-      {
-        "name": "items",
-        "type": "string[]"
-      }
-    ]
+  "getRows": {
+    "returnType": "string[]"
   },
-  "getSelected": {
+  "getColumns": {
+    "returnType": "string[]"
+  },
+  "getAvailable": {
     "returnType": "string[]"
   }
 }
