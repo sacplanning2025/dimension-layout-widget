@@ -1,104 +1,129 @@
 (function () {
 
-  class DragDropCheckbox extends HTMLElement {
+  class PlanningDragDrop extends HTMLElement {
 
     constructor() {
       super();
       this._shadowRoot = this.attachShadow({ mode: "open" });
-      this._items = [];
-      this._dragSrcEl = null;
+      this._available = [];
+      this._selected = [];
+      this._dragItem = null;
     }
 
     connectedCallback() {
       this.render();
     }
 
-    // ===== PROPERTY =====
-    set items(value) {
-      this._items = value ? value.split(",") : [];
+    // ====== PROPERTIES ======
+    set availableItems(val) {
+      this._available = val ? val.split(",") : [];
       this.render();
     }
 
-    get items() {
-      return this._items.join(",");
-    }
-
-    // ===== METHODS FOR SAC =====
-    setItems(itemsArray) {
-      this._items = itemsArray;
+    set selectedItems(val) {
+      this._selected = val ? val.split(",") : [];
       this.render();
     }
 
-    getItems() {
-      return this._items;
+    // ====== METHODS ======
+    setAvailable(arr) {
+      this._available = arr;
+      this.render();
     }
 
-    // ===== RENDER =====
+    setSelected(arr) {
+      this._selected = arr;
+      this.render();
+    }
+
+    getSelected() {
+      return this._selected;
+    }
+
+    // ====== RENDER ======
     render() {
 
       this._shadowRoot.innerHTML = `
         <style>
-          .container {
+          .wrapper {
             display: flex;
-            flex-direction: column;
-            gap: 6px;
+            gap: 15px;
             font-family: Arial;
           }
 
-          .checkbox-item {
-            padding: 6px;
+          .panel {
+            width: 45%;
             border: 1px solid #ccc;
-            border-radius: 4px;
-            cursor: move;
-            background: #f9f9f9;
-            display: flex;
-            align-items: center;
-            gap: 8px;
+            border-radius: 6px;
+            padding: 8px;
+            min-height: 250px;
           }
 
-          .checkbox-item.drag-over {
+          .title {
+            font-weight: bold;
+            margin-bottom: 6px;
+          }
+
+          .item {
+            padding: 6px;
+            margin-bottom: 4px;
+            background: #f5f5f5;
+            border-radius: 4px;
+            cursor: move;
+          }
+
+          .item.drag-over {
             border: 2px dashed #0073e6;
           }
 
-          .remove-btn {
-            margin-left: auto;
-            cursor: pointer;
-            color: red;
-            font-weight: bold;
-          }
-
-          button {
-            margin-top: 8px;
-            padding: 4px;
+          input {
+            width: 100%;
+            margin-bottom: 6px;
           }
         </style>
 
-        <div class="container">
-          ${this._items.map(item => `
-            <div class="checkbox-item" draggable="true" data-value="${item}">
-              <input type="checkbox" checked />
-              <span>${item}</span>
-              <span class="remove-btn">×</span>
+        <div class="wrapper">
+
+          <div class="panel" id="availablePanel">
+            <div class="title">Available</div>
+            <input type="text" placeholder="Search..." id="searchBox"/>
+            <div id="availableList">
+              ${this._available.map(i => this.createItemHTML(i)).join("")}
             </div>
-          `).join("")}
+          </div>
+
+          <div class="panel" id="selectedPanel">
+            <div class="title">Selected</div>
+            <div id="selectedList">
+              ${this._selected.map(i => this.createItemHTML(i)).join("")}
+            </div>
+          </div>
+
         </div>
       `;
 
-      this.addDragEvents();
-      this.addRemoveEvents();
+      this.addDragDrop();
+      this.addSearch();
     }
 
-    // ===== DRAG EVENTS =====
-    addDragEvents() {
-      const items = this._shadowRoot.querySelectorAll(".checkbox-item");
+    createItemHTML(text) {
+      return `<div class="item" draggable="true" data-value="${text}">${text}</div>`;
+    }
+
+    // ====== DRAG DROP ======
+    addDragDrop() {
+
+      const items = this._shadowRoot.querySelectorAll(".item");
+      const availableList = this._shadowRoot.getElementById("availableList");
+      const selectedList = this._shadowRoot.getElementById("selectedList");
 
       items.forEach(item => {
 
         item.addEventListener("dragstart", () => {
-          this._dragSrcEl = item;
+          this._dragItem = item;
         });
 
-        item.addEventListener("dragover", (e) => {
+        item.addEventListener("dragover", e => {
           e.preventDefault();
           item.classList.add("drag-over");
         });
@@ -107,52 +132,58 @@
           item.classList.remove("drag-over");
         });
 
-        item.addEventListener("drop", (e) => {
-          e.stopPropagation();
-
-          if (this._dragSrcEl !== item) {
-            const container = this._shadowRoot.querySelector(".container");
-            container.insertBefore(this._dragSrcEl, item);
-            this.updateOrder();
-          }
-
+        item.addEventListener("drop", e => {
+          e.preventDefault();
           item.classList.remove("drag-over");
-        });
 
+          if (this._dragItem !== item) {
+            item.parentNode.insertBefore(this._dragItem, item);
+            this.syncArrays();
+          }
+        });
+      });
+
+      [availableList, selectedList].forEach(panel => {
+        panel.addEventListener("dragover", e => e.preventDefault());
+
+        panel.addEventListener("drop", e => {
+          e.preventDefault();
+          panel.appendChild(this._dragItem);
+          this.syncArrays();
+        });
       });
     }
 
-    // ===== REMOVE ITEM =====
-    addRemoveEvents() {
-      const buttons = this._shadowRoot.querySelectorAll(".remove-btn");
+    // ====== SEARCH ======
+    addSearch() {
+      const searchBox = this._shadowRoot.getElementById("searchBox");
+      searchBox.addEventListener("input", e => {
+        const value = e.target.value.toLowerCase();
+        const items = this._shadowRoot.querySelectorAll("#availableList .item");
 
-      buttons.forEach(btn => {
-        btn.addEventListener("click", (e) => {
-          const item = e.target.closest(".checkbox-item");
-          item.remove();
-          this.updateOrder();
+        items.forEach(item => {
+          item.style.display = item.dataset.value.toLowerCase().includes(value)
+            ? "block"
+            : "none";
         });
       });
     }
 
-    // ===== UPDATE ORDER =====
-    updateOrder() {
-      const newOrder = [];
-      const items = this._shadowRoot.querySelectorAll(".checkbox-item");
+    // ====== SYNC ======
+    syncArrays() {
+      const selectedItems = this._shadowRoot.querySelectorAll("#selectedList .item");
+      this._selected = Array.from(selectedItems).map(i => i.dataset.value);
 
-      items.forEach(item => {
-        newOrder.push(item.dataset.value);
-      });
+      const availableItems = this._shadowRoot.querySelectorAll("#availableList .item");
+      this._available = Array.from(availableItems).map(i => i.dataset.value);
 
-      this._items = newOrder;
-
-      this.dispatchEvent(new CustomEvent("onOrderChanged", {
-        detail: { order: newOrder }
+      this.dispatchEvent(new CustomEvent("onSelectionChanged", {
+        detail: { selected: this._selected }
       }));
     }
 
   }
 
-  customElements.define("com-dragdrop-checkbox", DragDropCheckbox);
+  customElements.define("com-planning-dragdrop", PlanningDragDrop);
 
 })();
