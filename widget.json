@@ -1,28 +1,25 @@
 {
-  "id": "dimension_layout_controller",
-  "name": "Dimension Layout Controller",
-  "description": "Drag and reorder dimensions between Rows and Columns",
-  "version": "1.0.9",
-  "vendor": "Custom",
-  "newInstancePrefix": "DimLayout",
-
+  "name": "DragDropCheckbox",
+  "id": "dragdropcheckbox",
+  "newInstancePrefix": "DDC",
+  "version": "1.0.0",
   "webcomponents": [
     {
       "kind": "main",
-      "tag": "dim-layout-controller",
+      "tag": "com-dragdrop-checkbox",
       "url": "https://sacplanning2025.github.io/dimension-layout-widget/main.js",
-      "integrity": "sha256-REPLACE_WITH_REAL_HASH"
+      "integrity": "",
+      "ignoreIntegrity": true
     }
   ],
-
   "properties": {
-    "tableId": {
+    "items": {
       "type": "string",
-      "default": "Report_1"
+      "default": "Item1,Item2,Item3"
     }
   },
-
-  "methods": {},
-  "events": {}
+  "events": {
+    "onOrderChanged": {}
+  }
 }
 
