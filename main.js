@@ -19,18 +19,17 @@
       this.render();
     }
 
-    getLayout() {
-      const rows = this.getPanelValues("rowsList");
-      const columns = this.getPanelValues("columnsList");
-      const available = this.getPanelValues("availableList");
+   getRows() {
+  return this.getPanelValues("rowsList");
+}
 
-      return {
-        rows: rows,
-        columns: columns,
-        available: available
-      };
-    }
+getColumns() {
+  return this.getPanelValues("columnsList");
+}
 
+getAvailable() {
+  return this.getPanelValues("availableList");
+}
     // ===== RENDER UI =====
     render() {
 
@@ -156,14 +155,16 @@
     }
 
     // ===== FIRE EVENT TO SAC =====
-    fireLayoutEvent() {
+   fireLayoutEvent() {
 
-      const layout = this.getLayout();
-
-      this.dispatchEvent(new CustomEvent("onLayoutChanged", {
-        detail: layout
-      }));
+  this.dispatchEvent(new CustomEvent("onLayoutChanged", {
+    detail: {
+      rows: this.getRows(),
+      columns: this.getColumns(),
+      available: this.getAvailable()
     }
+  }));
+}
 
   }
 
