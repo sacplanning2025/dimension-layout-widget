@@ -1,122 +1,115 @@
 (function () {
 
-  const template = document.createElement("template");
-  template.innerHTML = `
-    <style>
-      h4 { margin: 6px 0; font-family: Arial; }
-      .zone {
-        border: 1px dashed #999;
-        min-height: 80px;
-        padding: 6px;
-        margin-bottom: 10px;
-        font-family: Arial;
-      }
-      .dim {
-        background: #f2f2f2;
-        padding: 6px;
-        margin: 4px 0;
-        cursor: grab;
-        border-radius: 4px;
-      }
-    </style>
-
-    <h4>Rows</h4>
-    <div id="rows" class="zone"></div>
-
-    <h4>Columns</h4>
-    <div id="columns" class="zone"></div>
-  `;
-
-  class DimLayoutController extends HTMLElement {
+  class DragDropCheckbox extends HTMLElement {
 
     constructor() {
       super();
-      this.attachShadow({ mode: "open" });
-      this.shadowRoot.appendChild(template.content.cloneNode(true));
+      this._shadowRoot = this.attachShadow({ mode: "open" });
+      this._items = [];
+      this._dragSrcEl = null;
     }
 
-    // REQUIRED BY SAC
-    onCustomWidgetBeforeUpdate(changedProperties) {
-      if (changedProperties.tableId) {
-        this.tableId = changedProperties.tableId;
-      }
+    connectedCallback() {
+      this.render();
     }
 
-    // REQUIRED BY SAC
-    onCustomWidgetAfterUpdate() {
-      this.syncFromTable();
-      this.enableDnD("rows");
-      this.enableDnD("columns");
+    set items(value) {
+      this._items = value.split(",");
+      this.render();
     }
 
-    // REQUIRED BY SAC
-    onCustomWidgetResize() {}
-
-    getTable() {
-      return this.getRootNode()
-        .getApplication()
-        .getWidgetById(this.tableId || "Report_1");
+    get items() {
+      return this._items.join(",");
     }
 
-    syncFromTable() {
-      const table = this.getTable();
-      if (!table) return;
+    render() {
+      this._shadowRoot.innerHTML = `
+        <style>
+          .container {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            font-family: Arial;
+          }
 
-      const ds = table.getDataSource();
-      this.renderAxis("rows", ds.getDimensionsOnRows());
-      this.renderAxis("columns", ds.getDimensionsOnColumns());
+          .checkbox-item {
+            padding: 6px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            cursor: move;
+            background: #f9f9f9;
+          }
+
+          .drag-over {
+            border: 2px dashed #0073e6;
+          }
+        </style>
+
+        <div class="container">
+          ${this._items.map(item => `
+            <div class="checkbox-item" draggable="true">
+              <input type="checkbox" value="${item}" />
+              ${item}
+            </div>
+          `).join("")}
+        </div>
+      `;
+
+      this.addDragEvents();
     }
 
-    renderAxis(id, dims) {
-      const box = this.shadowRoot.getElementById(id);
-      box.innerHTML = "";
+    addDragEvents() {
+      const items = this._shadowRoot.querySelectorAll(".checkbox-item");
 
-      dims.forEach(dim => {
-        const el = document.createElement("div");
-        el.className = "dim";
-        el.textContent = dim;
-        el.dataset.dim = dim;
-        el.draggable = true;
+      items.forEach(item => {
 
-        el.addEventListener("dragstart", e => {
-          e.dataTransfer.setData("text/plain", dim);
+        item.addEventListener("dragstart", (e) => {
+          this._dragSrcEl = item;
+          e.dataTransfer.effectAllowed = "move";
         });
 
-        box.appendChild(el);
+        item.addEventListener("dragover", (e) => {
+          e.preventDefault();
+          item.classList.add("drag-over");
+        });
+
+        item.addEventListener("dragleave", () => {
+          item.classList.remove("drag-over");
+        });
+
+        item.addEventListener("drop", (e) => {
+          e.stopPropagation();
+
+          if (this._dragSrcEl !== item) {
+            const container = this._shadowRoot.querySelector(".container");
+            container.insertBefore(this._dragSrcEl, item);
+
+            this.updateOrder();
+          }
+
+          item.classList.remove("drag-over");
+        });
+
       });
     }
 
-    enableDnD(id) {
-      const box = this.shadowRoot.getElementById(id);
+    updateOrder() {
+      const newOrder = [];
+      const items = this._shadowRoot.querySelectorAll(".checkbox-item");
 
-      box.ondragover = e => e.preventDefault();
+      items.forEach(item => {
+        newOrder.push(item.textContent.trim());
+      });
 
-      box.ondrop = e => {
-        e.preventDefault();
-        const dim = e.dataTransfer.getData("text/plain");
-        const dragged = this.shadowRoot.querySelector(`[data-dim="${dim}"]`);
-        if (dragged) box.appendChild(dragged);
-        this.applyLayout();
-      };
+      this._items = newOrder;
+
+      this.dispatchEvent(new CustomEvent("onOrderChanged", {
+        detail: { order: newOrder }
+      }));
     }
 
-    applyLayout() {
-      const table = this.getTable();
-      if (!table) return;
-
-      const ds = table.getDataSource();
-
-      ds.removeAllDimensionsFromRows();
-      ds.removeAllDimensionsFromColumns();
-
-      this.shadowRoot.querySelectorAll("#rows .dim")
-        .forEach(el => ds.addDimensionToRows(el.dataset.dim));
-
-      this.shadowRoot.querySelectorAll("#columns .dim")
-        .forEach(el => ds.addDimensionToColumns(el.dataset.dim));
-    }
   }
 
-  customElements.define("dim-layout-controller", DimLayoutController);
+  customElements.define("com-dragdrop-checkbox", DragDropCheckbox);
 
 })();
