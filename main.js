@@ -19,17 +19,18 @@
       this.render();
     }
 
-   getRows() {
-  return this.getPanelValues("rowsList");
-}
+    getRows() {
+      return this.getPanelValues("rowsList");
+    }
 
-getColumns() {
-  return this.getPanelValues("columnsList");
-}
+    getColumns() {
+      return this.getPanelValues("columnsList");
+    }
 
-getAvailable() {
-  return this.getPanelValues("availableList");
-}
+    getAvailable() {
+      return this.getPanelValues("availableList");
+    }
+
     // ===== RENDER UI =====
     render() {
 
@@ -48,11 +49,23 @@ getAvailable() {
             padding: 8px;
             min-height: 300px;
             background: #fafafa;
+            display: flex;
+            flex-direction: column;
           }
 
           .title {
             font-weight: bold;
             margin-bottom: 8px;
+          }
+
+          .search {
+            margin-bottom: 8px;
+            padding: 4px;
+          }
+
+          .list {
+            flex-grow: 1;
+            min-height: 200px;
           }
 
           .item {
@@ -72,25 +85,27 @@ getAvailable() {
 
           <div class="panel">
             <div class="title">Available</div>
-            <div id="availableList">
+            <input class="search" id="searchBox" placeholder="Search..." />
+            <div id="availableList" class="list">
               ${this._available.map(i => this.createItem(i)).join("")}
             </div>
           </div>
 
           <div class="panel">
             <div class="title">Rows</div>
-            <div id="rowsList"></div>
+            <div id="rowsList" class="list"></div>
           </div>
 
           <div class="panel">
             <div class="title">Columns</div>
-            <div id="columnsList"></div>
+            <div id="columnsList" class="list"></div>
           </div>
 
         </div>
       `;
 
       this.addDragEvents();
+      this.addSearch();
     }
 
     // ===== CREATE ITEM =====
@@ -98,50 +113,62 @@ getAvailable() {
       return `<div class="item" draggable="true" data-value="${value}">${value}</div>`;
     }
 
+    // ===== SEARCH FUNCTION =====
+    addSearch() {
+
+      const searchBox = this._shadowRoot.getElementById("searchBox");
+
+      searchBox.addEventListener("input", (e) => {
+
+        const value = e.target.value.toLowerCase();
+        const items = this._shadowRoot.querySelectorAll("#availableList .item");
+
+        items.forEach(item => {
+          item.style.display =
+            item.dataset.value.toLowerCase().includes(value)
+              ? "block"
+              : "none";
+        });
+
+      });
+    }
+
     // ===== DRAG & DROP =====
     addDragEvents() {
 
-      const lists = [
-        this._shadowRoot.getElementById("availableList"),
-        this._shadowRoot.getElementById("rowsList"),
-        this._shadowRoot.getElementById("columnsList")
-      ];
+      const shadow = this._shadowRoot;
 
-      const items = this._shadowRoot.querySelectorAll(".item");
+      const available = shadow.getElementById("availableList");
+      const rows = shadow.getElementById("rowsList");
+      const columns = shadow.getElementById("columnsList");
+
+      const panels = [available, rows, columns];
+
+      const items = shadow.querySelectorAll(".item");
 
       items.forEach(item => {
 
         item.addEventListener("dragstart", (e) => {
           this._dragItem = item;
+          e.dataTransfer.setData("text/plain", item.dataset.value);
           e.dataTransfer.effectAllowed = "move";
-        });
-
-        item.addEventListener("dragover", (e) => {
-          e.preventDefault();
-        });
-
-        item.addEventListener("drop", (e) => {
-          e.preventDefault();
-          if (this._dragItem && this._dragItem !== item) {
-            item.parentNode.insertBefore(this._dragItem, item);
-            this.fireLayoutEvent();
-          }
         });
 
       });
 
-      lists.forEach(list => {
+      panels.forEach(panel => {
 
-        list.addEventListener("dragover", (e) => {
+        panel.addEventListener("dragover", (e) => {
           e.preventDefault();
         });
 
-        list.addEventListener("drop", (e) => {
+        panel.addEventListener("drop", (e) => {
           e.preventDefault();
-          if (this._dragItem) {
-            list.appendChild(this._dragItem);
-            this.fireLayoutEvent();
-          }
+
+          if (!this._dragItem) return;
+
+          panel.appendChild(this._dragItem);
+          this.fireLayoutEvent();
         });
 
       });
@@ -155,16 +182,17 @@ getAvailable() {
     }
 
     // ===== FIRE EVENT TO SAC =====
-   fireLayoutEvent() {
+    fireLayoutEvent() {
 
-  this.dispatchEvent(new CustomEvent("onLayoutChanged", {
-    detail: {
-      rows: this.getRows(),
-      columns: this.getColumns(),
-      available: this.getAvailable()
+      this.dispatchEvent(new CustomEvent("onLayoutChanged", {
+        detail: {
+          rows: this.getRows(),
+          columns: this.getColumns(),
+          available: this.getAvailable()
+        }
+      }));
+
     }
-  }));
-}
 
   }
 
