@@ -27,8 +27,8 @@
   },
 
   "events": {
-    "onSelectionChanged": {
-      "description": "Triggered when selection changes"
+  "onLayoutChanged": {
+    "description": "Triggered when layout changes"
     }
   },
 
