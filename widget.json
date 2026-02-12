@@ -1,39 +1,40 @@
 {
-  "id": "dragdropcheckbox",
+  "id": "planningdragdrop",
   "version": "1.0.0",
-  "name": "Drag Drop Checkbox",
-  "newInstancePrefix": "DDC",
-  "description": "Drag and Drop Checkbox Group",
+  "name": "Planning Drag Drop Panel",
+  "newInstancePrefix": "PDD",
+  "description": "Professional Dual Panel Drag Drop for SAC Planning",
 
   "webcomponents": [
     {
       "kind": "main",
-      "tag": "com-dragdrop-checkbox",
+      "tag": "com-planning-dragdrop",
       "url": "https://sacplanning2025.github.io/dimension-layout-widget/main.js",
       "ignoreIntegrity": true
     }
   ],
 
   "properties": {
-    "items": {
+    "availableItems": {
       "type": "string",
       "default": "Amount,Quantity,SKF,Version,Date"
+    },
+    "selectedItems": {
+      "type": "string",
+      "default": ""
     }
   },
 
   "events": {
-    "onOrderChanged": {
-      "description": "Triggered when order changes"
+    "onSelectionChanged": {
+      "description": "Fires when selected order changes"
     }
   },
 
   "methods": {
-    "setItems": {
-      "description": "Set checkbox items dynamically"
-    },
-    "getItems": {
-      "description": "Get current order"
-    }
+    "setAvailable": {},
+    "setSelected": {},
+    "getSelected": {}
   }
 }
 
