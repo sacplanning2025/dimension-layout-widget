@@ -32,7 +32,7 @@
     }
   },
 
-  "methods": {
+ "methods": {
   "setAvailable": {
     "parameters": [
       {
@@ -50,5 +50,8 @@
   "getAvailable": {
     "returnType": "string[]"
   }
+},
+"events": {
+  "onLayoutChanged": {}
 }
 }
