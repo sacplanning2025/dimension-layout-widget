@@ -1,6 +1,6 @@
 {
   "id": "planningdragdrop",
-  "version": "1.0.2",
+  "version": "1.0.8",
   "name": "Planning Drag Drop Panel",
   "newInstancePrefix": "PDD",
   "description": "Professional Dual Panel Drag Drop for SAC Planning",
@@ -9,7 +9,8 @@
     {
       "kind": "main",
       "tag": "com-planning-dragdrop",
-      "url": "https://sacplanning2025.github.io/dimension-layout-widget/main.js",
+      "url": "/main.js",
+      "integrity": "",
       "ignoreIntegrity": true
     }
   ],
@@ -17,7 +18,7 @@
   "properties": {
     "availableItems": {
       "type": "string",
-      "default": "Amount,Quantity,SKF,Version,Date"
+      "default": ""
     },
     "selectedItems": {
       "type": "string",
@@ -27,7 +28,7 @@
 
   "events": {
     "onSelectionChanged": {
-      "description": "Fires when selected order changes"
+      "description": "Triggered when selection changes"
     }
   },
 
@@ -37,4 +38,3 @@
     "getSelected": {}
   }
 }
-
