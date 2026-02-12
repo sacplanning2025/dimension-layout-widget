@@ -13,8 +13,9 @@
       this.render();
     }
 
+    // ===== PROPERTY =====
     set items(value) {
-      this._items = value.split(",");
+      this._items = value ? value.split(",") : [];
       this.render();
     }
 
@@ -22,7 +23,19 @@
       return this._items.join(",");
     }
 
+    // ===== METHODS FOR SAC =====
+    setItems(itemsArray) {
+      this._items = itemsArray;
+      this.render();
+    }
+
+    getItems() {
+      return this._items;
+    }
+
+    // ===== RENDER =====
     render() {
+
       this._shadowRoot.innerHTML = `
         <style>
           .container {
@@ -38,34 +51,51 @@
             border-radius: 4px;
             cursor: move;
             background: #f9f9f9;
+            display: flex;
+            align-items: center;
+            gap: 8px;
           }
 
-          .drag-over {
+          .checkbox-item.drag-over {
             border: 2px dashed #0073e6;
+          }
+
+          .remove-btn {
+            margin-left: auto;
+            cursor: pointer;
+            color: red;
+            font-weight: bold;
+          }
+
+          button {
+            margin-top: 8px;
+            padding: 4px;
           }
         </style>
 
         <div class="container">
           ${this._items.map(item => `
-            <div class="checkbox-item" draggable="true">
-              <input type="checkbox" value="${item}" />
-              ${item}
+            <div class="checkbox-item" draggable="true" data-value="${item}">
+              <input type="checkbox" checked />
+              <span>${item}</span>
+              <span class="remove-btn">×</span>
             </div>
           `).join("")}
         </div>
       `;
 
       this.addDragEvents();
+      this.addRemoveEvents();
     }
 
+    // ===== DRAG EVENTS =====
     addDragEvents() {
       const items = this._shadowRoot.querySelectorAll(".checkbox-item");
 
       items.forEach(item => {
 
-        item.addEventListener("dragstart", (e) => {
+        item.addEventListener("dragstart", () => {
           this._dragSrcEl = item;
-          e.dataTransfer.effectAllowed = "move";
         });
 
         item.addEventListener("dragover", (e) => {
@@ -83,7 +113,6 @@
           if (this._dragSrcEl !== item) {
             const container = this._shadowRoot.querySelector(".container");
             container.insertBefore(this._dragSrcEl, item);
-
             this.updateOrder();
           }
 
@@ -93,12 +122,26 @@
       });
     }
 
+    // ===== REMOVE ITEM =====
+    addRemoveEvents() {
+      const buttons = this._shadowRoot.querySelectorAll(".remove-btn");
+
+      buttons.forEach(btn => {
+        btn.addEventListener("click", (e) => {
+          const item = e.target.closest(".checkbox-item");
+          item.remove();
+          this.updateOrder();
+        });
+      });
+    }
+
+    // ===== UPDATE ORDER =====
     updateOrder() {
       const newOrder = [];
       const items = this._shadowRoot.querySelectorAll(".checkbox-item");
 
       items.forEach(item => {
-        newOrder.push(item.textContent.trim());
+        newOrder.push(item.dataset.value);
       });
 
       this._items = newOrder;
